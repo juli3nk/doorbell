@@ -15,7 +15,7 @@ import (
 func main() {
 	var opts Options
 
-	if err := envconfig.Process("db", &opts); err != nil {
+	if err := envconfig.Process("doorbell", &opts); err != nil {
 		log.Fatal(err)
 	}
 
