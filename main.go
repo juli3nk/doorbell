@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -24,8 +23,6 @@ func main() {
 	if err := validate.Struct(opts); err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("%+v\n", opts)
 
 	e := echo.New()
 
