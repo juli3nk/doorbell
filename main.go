@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/juli3nk/doorbell/pkg/kodi"
 	"github.com/juli3nk/doorbell/pkg/telegram"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo"
@@ -54,11 +55,22 @@ func handleDingDong(c echo.Context) error {
 	if cc.Options.TelegramEnable {
 		for _, user := range cc.Options.TelegramUsers {
 			if err := telegram.Send(cc.Options.TelegramToken, user, cc.Options.TelegramMessage); err != nil {
+				log.Println(err)
 			}
 		}
 	}
 
 	if cc.Options.KodiEnable {
+		k, err := kodi.New(cc.Options.KodiHost, cc.Options.KodiPort, cc.Options.KodiUsername, cc.Options.KodiPassword)
+		if err != nil {
+			return err
+		}
+
+		if k.IsPlaying() {
+			if err := k.SendNotification(cc.Options.KodiTitle, cc.Options.KodiMessage, cc.Options.KodiDisplayTime); err != nil {
+				log.Println(err)
+			}
+		}
 	}
 
 	return c.NoContent(http.StatusOK)
