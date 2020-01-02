@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/juli3nk/doorbell/pkg/kodi"
+	"github.com/juli3nk/doorbell/pkg/sound"
 	"github.com/juli3nk/doorbell/pkg/telegram"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo"
@@ -67,6 +68,17 @@ func handleDingDong(c echo.Context) error {
 			if err := k.SendNotification(cc.Options.KodiTitle, cc.Options.KodiMessage, cc.Options.KodiDisplayTime); err != nil {
 				log.Println(err)
 			}
+		}
+	}
+
+	if cc.Options.SoundEnable {
+		s, err := sound.New(cc.Options.SoundStatefile, cc.Options.SoundHost, cc.Options.SoundPort)
+		if err != nil {
+			return err
+		}
+
+		if err := s.Play(); err != nil {
+			return err
 		}
 	}
 
