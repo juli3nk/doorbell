@@ -6,7 +6,7 @@ import (
 
 type Options struct {
 	CORSAllowOrigins []string `split_words:"true" default:"*"`
-	CORSAllowMethods []string `split_words:"true" default:"POST"`
+	CORSAllowMethods []string `split_words:"true" default:"POST,PUT"`
 	TelegramEnable   bool     `split_words:"true" default:"false"`
 	TelegramToken    string   `split_words:"true"`
 	TelegramUsers    []int    `split_words:"true"`
