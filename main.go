@@ -60,7 +60,7 @@ func handleDingDong(c echo.Context) error {
 		if cc.Options.TelegramEnable {
 			for _, user := range cc.Options.TelegramUsers {
 				if err := telegram.Send(cc.Options.TelegramToken, user, cc.Options.TelegramMessage); err != nil {
-					log.Println(err)
+					c.Logger().Info(err)
 				} else {
 					run = true
 				}
@@ -76,12 +76,12 @@ func handleDingDong(c echo.Context) error {
 		if cc.Options.KodiEnable {
 			k, err := kodi.New(cc.Options.KodiHost, cc.Options.KodiPort, cc.Options.KodiUsername, cc.Options.KodiPassword)
 			if err != nil {
-				log.Println(err)
+				c.Logger().Info(err)
 			}
 
 			if err == nil && k.IsPlaying() {
 				if err := k.SendNotification(cc.Options.KodiTitle, cc.Options.KodiMessage, cc.Options.KodiDisplayTime); err != nil {
-					log.Println(err)
+					c.Logger().Info(err)
 				} else {
 					run = true
 				}
@@ -97,12 +97,12 @@ func handleDingDong(c echo.Context) error {
 		if cc.Options.SoundEnable {
 			s, err := sound.New(cc.Options.SoundStatefile, cc.Options.SoundHost, cc.Options.SoundPort)
 			if err != nil {
-				log.Println(err)
+				c.Logger().Info(err)
 			}
 
 			if err == nil {
 				if err := s.Play(); err != nil {
-					log.Println(err)
+					c.Logger().Info(err)
 				} else {
 					run = true
 				}
@@ -115,11 +115,11 @@ func handleDingDong(c echo.Context) error {
 	for i := 0; i < 3; i++ {
 		select {
 		case r1 := <-chT:
-			log.Println("Telegram notification:", r1)
+			c.Logger().Info("Telegram notification:", r1)
 		case r2 := <-chK:
-			log.Println("Kodi notification:", r2)
+			c.Logger().Info("Kodi notification:", r2)
 		case r3 := <-chS:
-			log.Println("Sound notification:", r3)
+			c.Logger().Info("Sound notification:", r3)
 		}
 	}
 
