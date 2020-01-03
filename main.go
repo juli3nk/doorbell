@@ -50,35 +50,76 @@ func main() {
 func handleDingDong(c echo.Context) error {
 	cc := c.(*CustomContext)
 
-	if cc.Options.TelegramEnable {
-		for _, user := range cc.Options.TelegramUsers {
-			if err := telegram.Send(cc.Options.TelegramToken, user, cc.Options.TelegramMessage); err != nil {
-				log.Println(err)
+	chT := make(chan bool)
+	chK := make(chan bool)
+	chS := make(chan bool)
+
+	go func() {
+		var run bool
+
+		if cc.Options.TelegramEnable {
+			for _, user := range cc.Options.TelegramUsers {
+				if err := telegram.Send(cc.Options.TelegramToken, user, cc.Options.TelegramMessage); err != nil {
+					log.Println(err)
+				} else {
+					run = true
+				}
 			}
 		}
-	}
 
-	if cc.Options.KodiEnable {
-		k, err := kodi.New(cc.Options.KodiHost, cc.Options.KodiPort, cc.Options.KodiUsername, cc.Options.KodiPassword)
-		if err != nil {
-			return err
-		}
+		chT <- run
+	}()
 
-		if k.IsPlaying() {
-			if err := k.SendNotification(cc.Options.KodiTitle, cc.Options.KodiMessage, cc.Options.KodiDisplayTime); err != nil {
+	go func() {
+		var run bool
+
+		if cc.Options.KodiEnable {
+			k, err := kodi.New(cc.Options.KodiHost, cc.Options.KodiPort, cc.Options.KodiUsername, cc.Options.KodiPassword)
+			if err != nil {
 				log.Println(err)
 			}
-		}
-	}
 
-	if cc.Options.SoundEnable {
-		s, err := sound.New(cc.Options.SoundStatefile, cc.Options.SoundHost, cc.Options.SoundPort)
-		if err != nil {
-			return err
+			if err == nil && k.IsPlaying() {
+				if err := k.SendNotification(cc.Options.KodiTitle, cc.Options.KodiMessage, cc.Options.KodiDisplayTime); err != nil {
+					log.Println(err)
+				} else {
+					run = true
+				}
+			}
 		}
 
-		if err := s.Play(); err != nil {
-			return err
+		chK <- run
+	}()
+
+	go func() {
+		var run bool
+
+		if cc.Options.SoundEnable {
+			s, err := sound.New(cc.Options.SoundStatefile, cc.Options.SoundHost, cc.Options.SoundPort)
+			if err != nil {
+				log.Println(err)
+			}
+
+			if err == nil {
+				if err := s.Play(); err != nil {
+					log.Println(err)
+				} else {
+					run = true
+				}
+			}
+		}
+
+		chS <- run
+	}()
+
+	for i := 0; i < 3; i++ {
+		select {
+		case r1 := <-chT:
+			log.Println("Telegram notification:", r1)
+		case r2 := <-chK:
+			log.Println("Kodi notification:", r2)
+		case r3 := <-chS:
+			log.Println("Sound notification:", r3)
 		}
 	}
 
