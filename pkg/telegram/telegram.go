@@ -26,5 +26,5 @@ func Send(token string, userID int, text string) error {
 
 	bot.Send(msg.Sender, text)
 
-	return  nil
+	return nil
 }

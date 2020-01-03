@@ -65,12 +65,12 @@ func (c *Config) SendNotification(title, message string, displayTime int) error 
 	body := Payload{
 		JsonRpc: "2.0",
 		Method:  "GUI.ShowNotification",
-		Params:  map[string]interface{}{
+		Params: map[string]interface{}{
 			"title":       title,
 			"message":     message,
 			"displaytime": displayTime,
 		},
-		ID:     1,
+		ID: 1,
 	}
 
 	client := resty.New()
