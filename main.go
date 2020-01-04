@@ -50,9 +50,30 @@ func main() {
 func handleDingDong(c echo.Context) error {
 	cc := c.(*CustomContext)
 
+	chS := make(chan bool)
 	chT := make(chan bool)
 	chK := make(chan bool)
-	chS := make(chan bool)
+
+	go func() {
+		var run bool
+
+		if cc.Options.SoundEnable {
+			s, err := sound.New(cc.Options.SoundStatefile, cc.Options.SoundHost, cc.Options.SoundPort)
+			if err != nil {
+				c.Logger().Info(err)
+			}
+
+			if err == nil {
+				if err := s.Play(); err != nil {
+					c.Logger().Info(err)
+				} else {
+					run = true
+				}
+			}
+		}
+
+		chS <- run
+	}()
 
 	go func() {
 		var run bool
@@ -91,35 +112,14 @@ func handleDingDong(c echo.Context) error {
 		chK <- run
 	}()
 
-	go func() {
-		var run bool
-
-		if cc.Options.SoundEnable {
-			s, err := sound.New(cc.Options.SoundStatefile, cc.Options.SoundHost, cc.Options.SoundPort)
-			if err != nil {
-				c.Logger().Info(err)
-			}
-
-			if err == nil {
-				if err := s.Play(); err != nil {
-					c.Logger().Info(err)
-				} else {
-					run = true
-				}
-			}
-		}
-
-		chS <- run
-	}()
-
 	for i := 0; i < 3; i++ {
 		select {
-		case r1 := <-chT:
-			c.Logger().Info("Telegram notification:", r1)
-		case r2 := <-chK:
-			c.Logger().Info("Kodi notification:", r2)
-		case r3 := <-chS:
-			c.Logger().Info("Sound notification:", r3)
+		case r1 := <-chS:
+			c.Logger().Info("Sound notification:", r1)
+		case r2 := <-chT:
+			c.Logger().Info("Telegram notification:", r2)
+		case r3 := <-chK:
+			c.Logger().Info("Kodi notification:", r3)
 		}
 	}
 
